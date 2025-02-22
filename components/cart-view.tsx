@@ -128,9 +128,7 @@ export function CartView({ items, onUpdateQuantity, onClose }: CartViewProps) {
               <p className="font-medium">Полная стоимость</p>
               <p className="font-medium">{total} ₸</p>
             </div>
-            <Button className="w-full" onClick={() => setShowWaiter(true)}>
-              Показать официанту
-            </Button>
+          
           </div>
         </div>
       </div>

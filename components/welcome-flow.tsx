@@ -2,10 +2,18 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { useTranslation } from "react-i18next"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +28,7 @@ import {
 const VALID_PROMO_CODE = "7777777"
 
 export function WelcomeFlow() {
+  const { t, i18n } = useTranslation()
   const [showWelcome, setShowWelcome] = useState(false)
   const [showPromo, setShowPromo] = useState(false)
   const [promoCode, setPromoCode] = useState("")
@@ -71,9 +80,13 @@ export function WelcomeFlow() {
     setShowConfirmation(false);
   };
 
+  const handleLanguageChange = (value: string) => {
+    i18n.changeLanguage(value)
+  }
+
   return (
     <>
-      <Dialog
+  <Dialog
         open={showWelcome}
         onOpenChange={(open) => {
           if (!open) handleWelcomeClose()
@@ -88,10 +101,22 @@ export function WelcomeFlow() {
             <div className="mb-6">
               <Image src="/placeholder.svg" alt="Restaurant Logo" width={120} height={120} className="mx-auto" />
             </div>
-            <h2 className="text-2xl font-bold mb-4">Добро пожаловать в наше кафе</h2>
-            <p className="text-gray-600 mb-6">Откройте для себя изысканный мир вкусов в Аққайын</p>
+            <h2 className="text-2xl font-bold mb-4">{t('welcome')}</h2>
+            <p className="text-gray-600 mb-6">{t('description')}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{t('language')}:</span>
+              <Select onValueChange={handleLanguageChange} defaultValue={i18n.language}>
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ru">Русский</SelectItem>
+                  <SelectItem value="kk">Қазақша</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button onClick={handleWelcomeClose} className="w-full">
-              Продолжить
+              {t('continue')}
             </Button>
           </div>
         </DialogContent>
@@ -111,14 +136,14 @@ export function WelcomeFlow() {
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Специальное предложение</h2>
+            <h2 className="text-2xl font-bold mb-4">{t('specialOffer')}</h2>
             <p className="text-gray-600 mb-6">
-              Введите промокод и получите скидку 10% на ваш первый заказ
+              {t('enterPromoCode')}
             </p>
             <div className="space-y-4">
               <Input
                 type="text"
-                placeholder="Введите промокод"
+                placeholder={t('enterPromoCodePlaceholder')}
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
                 className="text-center text-lg tracking-wider"
@@ -129,7 +154,7 @@ export function WelcomeFlow() {
                 }}
               />
               <Button onClick={handlePromoSubmit} className="w-full">
-                Применить
+                {t('apply')}
               </Button>
             </div>
           </div>
@@ -137,19 +162,16 @@ export function WelcomeFlow() {
       </Dialog>
 
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogContent
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Вы упускаете возможность получить скидку 10% на ваш первый заказ
+              {t('youAreMissingOutOnDiscount')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelClose}>Остаться</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmClose}>Продолжить</AlertDialogAction>
+            <AlertDialogCancel onClick={handleCancelClose}>{t('stay')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmClose}>{t('continue')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -17,6 +18,7 @@ interface MenuCategoriesProps {
 }
 
 export function MenuCategories({ categories, selectedCategory, onSelectCategory }: MenuCategoriesProps) {
+  const { t } = useTranslation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(false)
@@ -85,7 +87,7 @@ export function MenuCategories({ categories, selectedCategory, onSelectCategory 
               onClick={() => onSelectCategory(category.id)}
               className="whitespace-nowrap rounded-full"
             >
-              {category.name}
+              {t(`categories.${category.id}`)}
             </Button>
           </motion.div>
         ))}
