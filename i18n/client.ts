@@ -10,8 +10,8 @@ i18next
     return import(`../public/locales/${language}/${namespace}.json`);
   }))
   .init({
-    lng: 'ru',
-    fallbackLng: 'ru',
+    lng: 'kk',
+    fallbackLng: 'kk',
     ns: ['translation'],
     defaultNS: 'translation',
     interpolation: {

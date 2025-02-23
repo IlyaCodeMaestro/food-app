@@ -92,35 +92,38 @@ export function WelcomeFlow() {
           if (!open) handleWelcomeClose()
         }}
       >
-        <DialogContent 
-          className="sm:max-w-md"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-          <div className="text-center">
-            <div className="mb-6">
-              <Image src="/placeholder.svg" alt="Restaurant Logo" width={120} height={120} className="mx-auto" />
-            </div>
-            <h2 className="text-2xl font-bold mb-4">{t('welcome')}</h2>
-            <p className="text-gray-600 mb-6">{t('description')}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{t('language')}:</span>
-              <Select onValueChange={handleLanguageChange} defaultValue={i18n.language}>
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ru">Русский</SelectItem>
-                  <SelectItem value="kk">Қазақша</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleWelcomeClose} className="w-full">
-              {t('continue')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+       <DialogContent
+    className="sm:max-w-md"
+    onPointerDownOutside={(e) => e.preventDefault()}
+    onEscapeKeyDown={(e) => e.preventDefault()}
+  >
+    <div className="text-center">
+      <div className="mb-6">
+        <Image src="/placeholder.svg" alt="Restaurant Logo" width={120} height={120} className="mx-auto" />
+      </div>
+      <h2 className="text-2xl font-bold mb-4">{t('welcome')}</h2>
+      <p className="text-gray-600 mb-6">{t('description')}</p>
+      
+      {/* Обертка для центрирования селекта */}
+      <div className="flex flex-col items-center mb-4">
+        <span className="text-sm text-muted-foreground mb-2">{t('language')}:</span>
+        <Select onValueChange={handleLanguageChange} defaultValue={i18n.language}>
+          <SelectTrigger className="w-[100px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ru">Русский</SelectItem>
+            <SelectItem value="kk">Қазақша</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Button onClick={handleWelcomeClose} className="w-full mt-4">
+        {t('continue')}
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
 
       <Dialog 
         open={showPromo} 

@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import { MenuCategories } from "@/components/menu-categories"
 import { MenuItem } from "@/components/menu-item"
-import { FloatingCart } from "@/components/floating-cart"
 import { CartModal } from "@/components/cart-modal"
 import { WelcomeFlow } from "@/components/welcome-flow"
+import { Header } from "@/components/header"
 import { MOCK_CATEGORIES, MOCK_ITEMS } from "@/lib/data"
 
 export default function Home() {
@@ -64,12 +64,11 @@ export default function Home() {
     <div className="min-h-screen bg-secondary">
       <WelcomeFlow />
       
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-xl md:text-2xl font-bold text-center">Аққайын</h1>
-        </div>
-      </header>
-
+      <Header 
+        cartItemCount={itemCount}
+        onCartClick={() => setShowCart(true)}
+      />
+      
       <main className="container mx-auto px-4 pb-24">
         <div className="py-4 mb-4">
           <MenuCategories
@@ -85,8 +84,6 @@ export default function Home() {
           ))}
         </div>
       </main>
-
-      <FloatingCart itemCount={itemCount} onClick={() => setShowCart(true)} />
 
       <CartModal
         items={cartItems}
