@@ -34,16 +34,34 @@
 
     --radius: 1rem;
   }
-}
 
-@layer utilities {
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 27 96% 61%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 24 9% 15%;
+    --secondary-foreground: 30 15% 94%;
+
+    --muted: 24 9% 15%;
+    --muted-foreground: 30 10% 40%;
+
+    --accent: 24 9% 15%;
+    --accent-foreground: 30 15% 94%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85% 97%;
+
+    --border: 222.2 84% 15%;
+    --input: 222.2 84% 15%;
+    --ring: 27 96% 61%;
   }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
 }
-

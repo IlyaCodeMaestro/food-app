@@ -1,28 +1,78 @@
-'use client';
+"use client";
 
-import { useTranslation } from 'react-i18next';
-import { ShoppingCart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-
+import { useTranslation } from "react-i18next";
+import { Moon, ShoppingCart, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 interface HeaderProps {
   cartItemCount: number;
   onCartClick: () => void;
 }
 
 export function Header({ cartItemCount, onCartClick }: HeaderProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    const savedLanguage = localStorage.getItem("language") || "kk";
+    i18n.changeLanguage(savedLanguage);
+  }, [i18n]);
+
+  const handleLanguageChange = (value: string) => {
+    i18n.changeLanguage(value);
+    localStorage.setItem("language", value);
+  };
 
   return (
-    <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b">
+    <div className="top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="flex justify-between items-center p-4 max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold">Аккайын</h1>
+
+        {/* Селект для выбора языка */}
+        <Select
+          onValueChange={handleLanguageChange}
+          defaultValue={i18n.language}
+        >
+          <SelectTrigger className="w-[100px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="kk">Қазақша</SelectItem>
+            <SelectItem value="ru">Русский</SelectItem>
+          </SelectContent>
+        </Select>
+        {mounted && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
+          >
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
+        )}
+
         <Button
           variant="ghost"
           className="flex items-center gap-2"
           onClick={onCartClick}
         >
-          <span className="text-sm font-medium">{t('cart.label')}</span>
+          <span className="text-sm font-medium">{t("cart.label")}</span>
           <div className="relative cart-icon">
             <ShoppingCart className="h-6 w-6" />
             {cartItemCount > 0 && (
