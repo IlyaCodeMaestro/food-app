@@ -129,7 +129,8 @@ export function WelcomeFlow() {
           open ? setShowPromo(true) : handlePromoClose()
         }
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md"
+        onPointerDownOutside={(e) => e.preventDefault()}> 
           {/* Крестик (X) для закрытия второго окна */}
           <DialogClose asChild>
             <button
@@ -157,33 +158,6 @@ export function WelcomeFlow() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* 🔹 Окно подтверждения (если пользователь закрыл промо вручную) */}
-      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("youAreMissingOutOnDiscount")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setShowConfirmation(false);
-                setShowPromo(true);
-              }}
-            >
-              {t("stay")}
-            </AlertDialogCancel>
-
-            {/* 🔹 Кнопка "Продолжить" → Закрывает подтверждение */}
-            <AlertDialogAction onClick={() => setShowConfirmation(false)}>
-              {t("continue")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
