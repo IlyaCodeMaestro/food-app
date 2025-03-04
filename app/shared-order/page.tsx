@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { inflate } from "pako";
+
 import { X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { inflate } from "pako";
 
 interface SimplifiedItem {
   id: string;
@@ -31,15 +32,10 @@ export default function SharedOrder() {
       if (dataParam) {
         // Декодируем из Base64
         const decoded = atob(dataParam);
-
-        // Распаковываем через pako
-        const decompressOrderData = (compressed: string) => {
-          const decoded = atob(compressed); // Декодируем из base64
-          const byteArray = new Uint8Array(
-            [...decoded].map((c) => c.charCodeAt(0))
-          ); // Преобразуем в Uint8Array
-          return JSON.parse(new TextDecoder().decode(inflate(byteArray))); // Декодируем и парсим JSON
-        };
+        const byteArray = new Uint8Array([...decoded].map((c) => c.charCodeAt(0)));
+        const jsonString = new TextDecoder().decode(inflate(byteArray));
+        const parsedData: CompactOrderData = JSON.parse(jsonString);
+        setOrderData(parsedData);
       } else {
         setError("Информация о заказе не найдена");
       }
@@ -148,24 +144,8 @@ export default function SharedOrder() {
           <span>{t("cart.total")}:</span>
           <span>{formatPrice(orderData.s)}</span>
         </div>
-
-        <div className="p-4 border-t flex justify-center">
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setLanguage("ru")}
-              className={`px-3 py-1 rounded ${language === "ru" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
-            >
-              Русский
-            </button>
-            <button
-              onClick={() => setLanguage("kk")}
-              className={`px-3 py-1 rounded ${language === "kk" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
-            >
-              Қазақша
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
+
