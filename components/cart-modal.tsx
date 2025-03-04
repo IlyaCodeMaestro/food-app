@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { X, Minus, Plus } from "lucide-react";
 import Image from "next/image";
-import LZString from "lz-string";
+import { deflate, inflate } from "pako";
 interface CartItem {
   item: {
     id: string;
@@ -36,12 +36,15 @@ interface CartModalProps {
 }
 
 const compressOrderData = (items: CartItem[], tableNumber: string, total: number) => {
-  const data = JSON.stringify({ items, tableNumber, total });
-  return LZString.compressToEncodedURIComponent(data);
+  const json = JSON.stringify({ i: items, t: tableNumber, tt: total });
+  const compressed = deflate(json);
+  return btoa(String.fromCharCode(...compressed));
 };
 
 const decompressOrderData = (compressed: string) => {
-  return JSON.parse(LZString.decompressFromEncodedURIComponent(compressed) || "{}");
+  const decoded = atob(compressed);
+  const byteArray = new Uint8Array([...decoded].map((c) => c.charCodeAt(0)));
+  return JSON.parse(new TextDecoder().decode(inflate(byteArray)));
 };
 
 export function CartModal({

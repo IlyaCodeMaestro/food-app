@@ -1,50 +1,56 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
-import { X } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { inflate } from "pako";
+import { X } from "lucide-react";
 
 interface SimplifiedItem {
-  id: string
-  t: string // title
-  p: number // price
-  q: number // quantity
+  id: string;
+  t: string; // title
+  p: number; // price
+  q: number; // quantity
 }
 
 interface CompactOrderData {
-  i: SimplifiedItem[] // items
-  t: string // tableNumber
-  s: number // sum (total)
+  i: SimplifiedItem[]; // items
+  t: string; // tableNumber
+  s: number; // sum (total)
 }
 
 export default function SharedOrder() {
-  const searchParams = useSearchParams()
-  const [orderData, setOrderData] = useState<CompactOrderData | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [language, setLanguage] = useState<string>("ru") // Default language
+  const searchParams = useSearchParams();
+  const [orderData, setOrderData] = useState<CompactOrderData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string>("ru"); // Default language
 
   useEffect(() => {
     try {
-      // Get data parameter from URL
-      const dataParam = searchParams.get("data")
+      const dataParam = searchParams.get("data");
 
       if (dataParam) {
-        // Decode URL-encoded JSON and parse
-        const jsonData = decodeURIComponent(dataParam)
-        const parsedData = JSON.parse(jsonData) as CompactOrderData
-        setOrderData(parsedData)
+        // Декодируем из Base64
+        const decoded = atob(dataParam);
+
+        // Распаковываем через pako
+        const decompressOrderData = (compressed: string) => {
+          const decoded = atob(compressed); // Декодируем из base64
+          const byteArray = new Uint8Array(
+            [...decoded].map((c) => c.charCodeAt(0))
+          ); // Преобразуем в Uint8Array
+          return JSON.parse(new TextDecoder().decode(inflate(byteArray))); // Декодируем и парсим JSON
+        };
       } else {
-        setError("Информация о заказе не найдена")
+        setError("Информация о заказе не найдена");
       }
     } catch (err) {
-      console.error("Error decoding shared order data:", err)
-      setError("Не удалось загрузить информацию о заказе")
+      console.error("Ошибка при декодировании заказа:", err);
+      setError("Не удалось загрузить информацию о заказе");
     }
-  }, [searchParams])
+  }, [searchParams]);
 
-  const formatPrice = (price: number) => `${price.toLocaleString()} ₸`
+  const formatPrice = (price: number) => `${price.toLocaleString()} ₸`;
 
-  // Translations
   const translations = {
     ru: {
       "cart.yourOrder": "Ваш заказ",
@@ -66,12 +72,12 @@ export default function SharedOrder() {
       error: "Қате",
       loading: "Жүктелуде...",
     },
-  }
+  };
 
   const t = (key: string) =>
     translations[language as keyof typeof translations][
       key as keyof (typeof translations)[keyof typeof translations]
-    ] || key
+    ] || key;
 
   if (error) {
     return (
@@ -84,7 +90,7 @@ export default function SharedOrder() {
           <p>{error}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!orderData) {
@@ -95,17 +101,18 @@ export default function SharedOrder() {
           <p className="mt-4">{t("loading")}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="container max-w-md mx-auto p-4">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-4 bg-primary text-primary-foreground">
-          <h1 className="text-xl font-bold text-center">{t("cart.yourOrder")}</h1>
+          <h1 className="text-xl font-bold text-center">
+            {t("cart.yourOrder")}
+          </h1>
         </div>
 
-        {/* Отображение номера столика */}
         {orderData.t && (
           <div className="text-center bg-muted p-3">
             <span className="font-semibold text-lg">
@@ -128,7 +135,9 @@ export default function SharedOrder() {
                 <tr key={item.id} className="border-t">
                   <td className="p-3">{item.t}</td>
                   <td className="text-right p-3">{item.q}</td>
-                  <td className="text-right p-3">{formatPrice(item.p * item.q)}</td>
+                  <td className="text-right p-3">
+                    {formatPrice(item.p * item.q)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -158,6 +167,5 @@ export default function SharedOrder() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
