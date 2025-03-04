@@ -7,13 +7,14 @@ import { Plus, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FlyingItem } from "./flying-item";
-
 interface MenuItem {
   id: string;
   titleKaz: string;
   titleRus: string;
+  titleEng: string;
   descriptionKaz: string;
   descriptionRus: string;
+  descriptionEng: string;
   price: number;
   image: string;
   tag?: string;
@@ -27,14 +28,25 @@ interface MenuItemProps {
 export function MenuItem({ item, onAddToCart }: MenuItemProps) {
   const { t, i18n } = useTranslation();
   const language = i18n.language;
-  const title = language === "kk" ? item.titleKaz : item.titleRus;
+
+  const title =
+    language === "kk"
+      ? item.titleKaz
+      : language === "ru"
+      ? item.titleRus
+      : item.titleEng; // ✅ Теперь поддерживается английский
+
   const description =
-    language === "kk" ? item.descriptionKaz : item.descriptionRus;
+    language === "kk"
+      ? item.descriptionKaz
+      : language === "ru"
+      ? item.descriptionRus
+      : item.descriptionEng; // ✅ Теперь поддерживается английский
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
-
+  const [isZoomed, setIsZoomed] = useState(false);
   const handleAddToCart = () => {
     if (!buttonRef.current || isAnimating) return;
     const cartIcon = document.querySelector(".cart-icon");
@@ -94,29 +106,53 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
         </div>
       </motion.div>
 
-      {/* 🔍 Модальное окно для увеличенного изображения */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent
-          className="max-w-3xl max-h-screen p-6 lg:p-8 xl:p-10 flex flex-col items-center justify-center rounded-lg overflow-auto bg-card" // ✅ Гарантируем центрирование
-          onPointerDownOutside={(e) => e.preventDefault()} // ❌ Блокируем закрытие кликом вне окна
-          onEscapeKeyDown={(e) => e.preventDefault()} // ❌ Блокируем закрытие по Esc
-        >
-          {/* ❌ Кнопка закрытия */}
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="absolute top-4 right-4 md:top-6 md:right-6 lg:top-8 lg:right-8 text-gray-500 hover:text-gray-800 transition"
-          ></button>
+  <DialogContent
+    className="max-w-6xl w-[95vw] sm:w-[90vw] md:w-[90vw] lg:w-[80vw] h-[90vh] p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center rounded-lg bg-card relative overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+    onPointerDownOutside={(e) => e.preventDefault()}
+    onEscapeKeyDown={(e) => e.preventDefault()}
+  >
+    <button
+      onClick={() => setIsModalOpen(false)}
+      className="absolute top-4 right-4 z-50 text-gray-500 hover:text-gray-800 transition-colors group"
+    >
+      <X 
+        className="h-6 w-6 stroke-current stroke-2 group-hover:rotate-90 transition-transform" 
+        strokeWidth={2}
+      />
+    </button>
 
-          {/* Увеличенное изображение */}
+    <div className="w-full h-full flex items-center justify-center relative">
+      <div 
+        className={`w-full h-full flex items-center justify-center relative ${
+          isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+        }`}
+        onClick={() => setIsZoomed(!isZoomed)}
+      >
+        <motion.div
+          initial={{ scale: 1 }}
+          animate={{ 
+            scale: isZoomed ? 2.5 : 1,
+            transformOrigin: 'center center'
+          }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 20 
+          }}
+          className="w-full h-full flex items-center justify-center relative"
+        >
           <Image
             src={item.image || "/placeholder.svg"}
             alt={title}
-            width={700} // ✅ Сделали ещё больше
-            height={700}
-            className="rounded-lg"
+            fill
+            className="object-contain w-full h-full max-w-full max-h-full rounded-lg shadow-lg"
           />
-        </DialogContent>
-      </Dialog>
+        </motion.div>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
 
       {/* 🛒 Анимация перелёта товара в корзину */}
       {isAnimating && (

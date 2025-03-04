@@ -1,11 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
 import {
   Select,
   SelectContent,
@@ -13,151 +10,123 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
-const VALID_PROMO_CODE = "7777777";
+import { useTranslation } from "react-i18next";
+import { Input } from "./ui/input";
 
 export function WelcomeFlow() {
   const { t, i18n } = useTranslation();
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [showPromo, setShowPromo] = useState(false);
-  const [promoCode, setPromoCode] = useState("");
-  const [showConfirmation, setShowConfirmation] = useState(false);
-
-  // ✅ Загружаем язык при первой загрузке
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem("language") || "kk"; // Казахский по умолчанию
-    i18n.changeLanguage(savedLanguage); // Устанавливаем язык
-  }, []);
+  const [step, setStep] = useState(1);
+  const [isLanguageLoaded, setIsLanguageLoaded] = useState(false); // Флаг загрузки
 
   useEffect(() => {
-    console.log("⚡ useEffect() выполнен!");
-    setShowWelcome(true); // Теперь окно открывается всегда
+    const savedLanguage = localStorage.getItem("language") || "kk";
+    i18n.changeLanguage(savedLanguage).then(() => setIsLanguageLoaded(true)); // Устанавливаем флаг после загрузки
   }, []);
-
-  const handleWelcomeClose = () => {
-    setShowWelcome(false);
-    setShowPromo(true); // Открываем окно промокода
-  };
-
-  const handlePromoClose = () => {
-    setShowPromo(false);
-    setShowConfirmation(true); // Открываем подтверждение ТОЛЬКО при закрытии вручную
-  };
-
-  const handlePromoSubmit = () => {
-    if (promoCode.trim() === VALID_PROMO_CODE) {
-      alert("🎉 Промокод активирован! Ваша скидка 10% успешно применена.");
-      setShowPromo(false);
-      localStorage.setItem("hasSeenPromo", "true");
-      localStorage.setItem("hasSeenWelcome", "true");
-    } else {
-      alert("❌ Неверный промокод. Проверьте правильность ввода.");
-    }
-  };
 
   const handleLanguageChange = (value: string) => {
-    console.log("🌍 Выбран язык:", value);
-    i18n.changeLanguage(value); // Мгновенное переключение языка
-    localStorage.setItem("language", value); // ✅ Сохраняем в localStorage
+    i18n.changeLanguage(value);
+    localStorage.setItem("language", value);
+  };
+ 
+  if (!isLanguageLoaded) return null;
+
+  const reloadPage = () => {
+    window.location.reload();
   };
 
   return (
     <>
-      {/* 🔹 Первое модальное окно (Welcome) */}
-      <Dialog
-        open={showWelcome}
-        onOpenChange={(open) => open && setShowWelcome(true)}
-      >
-        <DialogContent
-          className="sm:max-w-md [&>button]:hidden"
-          onPointerDownOutside={(e) => e.preventDefault()} // 🔒 Блокируем клик по пустому месту
-          onEscapeKeyDown={(e) => e.preventDefault()} // 🔒 Блокируем закрытие по `Esc`
-        >
-          <div className="text-center">
-            <div className="mb-6">
+      {/* Первое модальное окно: Приветствие */}
+      {step === 1 && (
+        <Dialog open>
+          <DialogContent
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+            className="sm:max-w-lg p-8 bg-gradient-to-r from-blue-100 to-white rounded-xl shadow-lg"
+          >
+            <div className="text-center">
               <Image
-                src="/placeholder.svg"
-                alt="Restaurant Logo"
-                width={120}
-                height={120}
-                className="mx-auto"
+                src="/logo.svg"
+                alt="Ак Кайын"
+                width={150}
+                height={150}
+                className="mx-auto mb-4"
               />
-            </div>
-            <h2 className="text-2xl font-bold mb-4">{t("welcome")}</h2>
-            <p className="text-gray-600 mb-6">{t("description")}</p>
-
-            {/* Выбор языка */}
-            <div className="flex flex-col items-center mb-4">
-              <span className="text-sm text-muted-foreground mb-2">
-                {t("language")}:
-              </span>
+              <h2 className="text-3xl font-extrabold text-blue-800 mb-4">
+                {t("welcome")}
+              </h2>
+              <p className="text-gray-700 text-lg mb-6">
+                {t("welcomeMessage")}
+              </p>
+              <p className="text-gray-600 mb-4"> {t("language")} </p>
               <Select
                 onValueChange={handleLanguageChange}
                 defaultValue={i18n.language}
               >
-                <SelectTrigger className="w-[100px]">
+                <SelectTrigger className="w-[140px] mx-auto border-blue-500 text-blue-700 font-semibold">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="kk">Қазақша</SelectItem>
                   <SelectItem value="ru">Русский</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <Button onClick={handleWelcomeClose} className="w-full mt-4">
-              {t("continue")}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 🔹 Второе модальное окно (Промокод) */}
-      <Dialog
-        open={showPromo}
-        onOpenChange={(open) =>
-          open ? setShowPromo(true) : handlePromoClose()
-        }
-      >
-        <DialogContent className="sm:max-w-md"
-        onPointerDownOutside={(e) => e.preventDefault()}> 
-          {/* Крестик (X) для закрытия второго окна */}
-          <DialogClose asChild>
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              onClick={handlePromoClose}
-            ></button>
-          </DialogClose>
-
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">{t("specialOffer")}</h2>
-            <p className="text-gray-600 mb-6">{t("enterPromoCode")}</p>
-            <div className="space-y-4">
-              <Input
-                type="text"
-                placeholder={t("enterPromoCodePlaceholder")}
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                className="text-center text-lg tracking-wider"
-                onKeyDown={(e) => e.key === "Enter" && handlePromoSubmit()}
-              />
-              <Button onClick={handlePromoSubmit} className="w-full">
-                {t("apply")}
+              <Button
+                onClick={() => setStep(2)}// Блокируем кнопку, если номер столика не введен
+                className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
+              >
+                {t("continue")}
               </Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Второе модальное окно: 10% обслуживание */}
+      {step === 2 && (
+        <Dialog open>
+          <DialogContent
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+          >
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-4">{t("order")}</h2>
+              <p className="text-gray-600 mb-6">{t("agreement")}</p>
+              <div className="flex gap-4 justify-center">
+                <Button onClick={() => setStep(3)}>{t("yes")}</Button>
+                <Button onClick={reloadPage} variant="destructive">
+                  {t("no")}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Третье модальное окно: Аренда тапчанов и беседок */}
+      {step === 3 && (
+        <Dialog open>
+          <DialogContent
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+          >
+            <div className="text-center">
+              <h2 className="text-3xl font-extrabold text-blue-800 mb-4">
+                {t("rent")}
+              </h2>
+              <p className="text-gray-700 text-lg mb-6">{t("agree")}</p>
+
+              <div className="flex gap-4 justify-center">
+                <Button onClick={() => setStep(4)}>{t("yes")}</Button>
+                <Button onClick={reloadPage} variant="destructive">
+                  {t("no")}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

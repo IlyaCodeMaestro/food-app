@@ -8,6 +8,7 @@ interface Category {
   id: string;
   titleKaz?: string;
   titleRus?: string;
+  titleEng?: string;
 }
 
 interface MenuCategoriesProps {
@@ -107,7 +108,9 @@ export function MenuCategories({
               const categoryTitle =
                 i18n.language === "kk"
                   ? category.titleKaz || "Неизвестная категория"
-                  : category.titleRus || "Неизвестная категория";
+                  : i18n.language === "ru"
+                  ? category.titleRus || "Неизвестная категория"
+                  : category.titleEng || "Unknown category";
 
               return (
                 <motion.div

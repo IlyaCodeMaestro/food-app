@@ -13,6 +13,7 @@ import {
 } from "./ui/select";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+
 interface HeaderProps {
   cartItemCount: number;
   onCartClick: () => void;
@@ -22,15 +23,23 @@ export function Header({ cartItemCount, onCartClick }: HeaderProps) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language);
+
   useEffect(() => {
     setMounted(true);
     const savedLanguage = localStorage.getItem("language") || "kk";
     i18n.changeLanguage(savedLanguage);
+    setSelectedLanguage(savedLanguage);
   }, [i18n]);
+
+  useEffect(() => {
+    setSelectedLanguage(i18n.language);
+  }, [i18n.language]);
 
   const handleLanguageChange = (value: string) => {
     i18n.changeLanguage(value);
     localStorage.setItem("language", value);
+    setSelectedLanguage(value);
   };
 
   return (
@@ -39,18 +48,17 @@ export function Header({ cartItemCount, onCartClick }: HeaderProps) {
         <h1 className="text-2xl font-bold">Аккайын</h1>
 
         {/* Селект для выбора языка */}
-        <Select
-          onValueChange={handleLanguageChange}
-          defaultValue={i18n.language}
-        >
+        <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
           <SelectTrigger className="w-[100px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="kk">Қазақша</SelectItem>
             <SelectItem value="ru">Русский</SelectItem>
+            <SelectItem value="en">English</SelectItem>
           </SelectContent>
         </Select>
+
         {mounted && (
           <Button
             variant="ghost"

@@ -1,0 +1,27 @@
+{
+  "welcome": "Welcome to the Ak Kayin Recreation Area!",
+  "welcomeMessage": "Experience the atmosphere of comfort and coziness in nature. We are happy to see you here!",
+  "continue": "Continue",
+  "language": "Choose your preferred language",
+  "order": "We have 10% service of the order cost",
+  "agreement": "Do you agree?",
+  "yes": "Yes",
+  "no": "No",
+  "rent": "We have rentals of low tables and gazebos",
+  "agree": "Do you agree with the price list?",
+  "tableNumberLabel": "Enter table number",
+  "cart.tableNumberLabel": "Your table number",
+  "cart": {
+    "title": "Cart",
+    "yourOrder": "Your Order",
+    "empty": "Cart is empty",
+    "addToCart": "Add to Cart",
+    "total": "Total",
+    "checkout": "Show order to the waiter",
+    "continue": "Go to Cart",
+    "quantity": "Quantity",
+    "sum": "Sum",
+    "name": "Name",
+    "label": "Cart"
+  }
+}

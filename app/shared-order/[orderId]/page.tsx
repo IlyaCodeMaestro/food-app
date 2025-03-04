@@ -1,7 +1,6 @@
 "use client"
 import type React from "react"
 import { useState, useEffect } from "react"
-import QRCode from "react-qr-code"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -30,31 +29,11 @@ interface CartModalProps {
   onClose: () => void
 }
 
-// В начале файла замените функцию compressOrderData на следующую:
-const compressOrderData = (items: CartItem[], tableNumber: string, total: number) => {
-  // Создаем упрощенное представление товаров (только ID, количество и цена)
-  const simplifiedItems = items.map(({ item, quantity }) => ({
-    id: item.id,
-    t: item.titleRus, // Используем только русское название для компактности
-    p: item.price,
-    q: quantity,
-  }))
-
-  // Создаем компактный объект данных
-  const compactData = {
-    i: simplifiedItems,
-    t: tableNumber,
-    s: total,
-  }
-
-  // Преобразуем в JSON и кодируем для URL
-  return encodeURIComponent(JSON.stringify(compactData))
-}
-
 export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalProps) {
   const { t, i18n } = useTranslation()
   const [showReceipt, setShowReceipt] = useState(false)
   const [tableNumber, setTableNumber] = useState("")
+  const [showQrOrder, setShowQrOrder] = useState(false)
 
   useEffect(() => {
     // Clear table number on page reload
@@ -72,11 +51,6 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
 
   const formatPrice = (price: number) => `${price.toLocaleString()} ₸`
 
-  // Используем фактический домен вашего приложения
-  const getQrCodeUrl = () => {
-    return `https://food-app-kohl-rho.vercel.app/shared-order?data=${compressOrderData(items, tableNumber, total)}`
-  }
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
@@ -90,42 +64,109 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
         </DialogHeader>
 
         {showReceipt ? (
-          <div className="space-y-4">
-            {/* Отображение номера столика в чеке */}
-            {tableNumber && (
-              <div className="text-center bg-muted p-3 rounded-lg">
-                <span className="font-semibold text-lg">
-                  {t("cart.tableNumberLabel")}: {tableNumber}
-                </span>
-              </div>
-            )}
-            <div className="flex flex-col items-center justify-center p-4 space-y-4">
-              <div className="bg-white p-4 rounded-lg">
-                <QRCode
-                  value={getQrCodeUrl()}
-                  size={256}
-                  level="M"
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  viewBox={`0 0 256 256`}
-                />
-              </div>
-              <p className="text-center text-sm text-muted-foreground">
-                {t("cart.scanQrCodeText", "Отсканируйте QR-код, чтобы поделиться заказом")}
-              </p>
-              <p className="text-center text-xs text-muted-foreground break-all">{getQrCodeUrl()}</p>
-            </div>
+          showQrOrder ? (
+            // QR-код с таблицей заказа
+            <div className="space-y-4">
+              <button onClick={() => setShowQrOrder(false)} className="text-sm text-primary hover:underline">
+                &larr; Назад к чеку
+              </button>
 
-            <div className="flex justify-between items-center font-bold text-lg">
-              <span>{t("cart.total")}:</span>
-              <span>{formatPrice(total)}</span>
-            </div>
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="p-4 bg-primary text-primary-foreground">
+                  <h1 className="text-xl font-bold text-center">{t("cart.yourOrder")}</h1>
+                </div>
 
-            <div className="flex gap-2">
-              <Button className="w-full flex-1" onClick={() => setShowReceipt(false)}>
-                {t("cart.continue")}
-              </Button>
+                {/* Отображение номера столика */}
+                {tableNumber && (
+                  <div className="text-center bg-muted p-3">
+                    <span className="font-semibold text-lg">
+                      {t("cart.tableNumberLabel")}: {tableNumber}
+                    </span>
+                  </div>
+                )}
+
+                <div className="border-t">
+                  <table className="w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-3">{t("cart.name")}</th>
+                        <th className="text-right p-3">{t("cart.quantity")}</th>
+                        <th className="text-right p-3">{t("cart.sum")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map(({ item, quantity }) => {
+                        // Выбираем язык для отображения названия блюда
+                        const title = i18n.language === "kk" ? item.titleKaz : item.titleRus
+                        return (
+                          <tr key={item.id} className="border-t">
+                            <td className="p-3">{title}</td>
+                            <td className="text-right p-3">{quantity}</td>
+                            <td className="text-right p-3">{formatPrice(item.price * quantity)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="p-4 border-t flex justify-between items-center font-bold text-lg">
+                  <span>{t("cart.total")}:</span>
+                  <span>{formatPrice(total)}</span>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            // Обычный чек с кнопкой для QR-кода
+            <div className="space-y-4">
+              {/* Отображение номера столика в чеке */}
+              {tableNumber && (
+                <div className="text-center bg-muted p-3 rounded-lg">
+                  <span className="font-semibold text-lg">
+                    {t("cart.tableNumberLabel")}: {tableNumber}
+                  </span>
+                </div>
+              )}
+              <div className="border rounded-lg max-h-[60vh] overflow-auto">
+                <table className="w-full">
+                  <thead className="bg-muted sticky top-0 z-10">
+                    <tr>
+                      <th className="text-left p-3">{t("cart.name")}</th>
+                      <th className="text-right p-3">{t("cart.quantity")}</th>
+                      <th className="text-right p-3">{t("cart.sum")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map(({ item, quantity }) => {
+                      // Выбираем язык для отображения названия блюда
+                      const title = i18n.language === "kk" ? item.titleKaz : item.titleRus
+                      return (
+                        <tr key={item.id} className="border-t">
+                          <td className="p-3">{title}</td>
+                          <td className="text-right p-3">{quantity}</td>
+                          <td className="text-right p-3">{formatPrice(item.price * quantity)}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-between items-center font-bold text-lg">
+                <span>{t("cart.total")}:</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+
+              <div className="flex gap-2">
+                <Button className="w-full flex-1" onClick={() => setShowReceipt(false)}>
+                  {t("cart.continue")}
+                </Button>
+                <Button className="w-full flex-1" variant="outline" onClick={() => setShowQrOrder(true)}>
+                  Показать QR-код
+                </Button>
+              </div>
+            </div>
+          )
         ) : (
           <div className="space-y-4">
             {items.length === 0 ? (
@@ -208,7 +249,4 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
     </Dialog>
   )
 }
-
-
-
 

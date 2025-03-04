@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { client, urlFor } from "@/sanity/client";
 import { MenuCategories } from "@/components/menu-categories";
 import { MenuItem } from "@/components/menu-item";
-import { CartModal } from "@/components/cart-modal";
 import { WelcomeFlow } from "@/components/welcome-flow";
 import { Header } from "@/components/header";
+import { CartModal } from "@/components/cart-modal";
 const QUERY = `{
   "categories": *[_type == "category"]{ _id, titleKaz, titleRus }, // ✅ Теперь загружаем titleKaz и titleRus
   "dishes": *[_type == "dish"]{
