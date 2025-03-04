@@ -31,27 +31,21 @@ interface CartModalProps {
 }
 
 const compressOrderData = (items: CartItem[], tableNumber: string, total: number) => {
-  const simplifiedItems = items.map(({ item, quantity }) => ({
-    id: item.id,
-    t: item.titleRus,
-    p: item.price,
-    q: quantity,
-  }))
+  return encodeURIComponent(
+    JSON.stringify({
+      i: items.map(({ item, quantity }) => [item.id, item.price, quantity]), // id, price, quantity
+      t: tableNumber,
+      s: total,
+    })
+  );
+};
 
-  const compactData = {
-    i: simplifiedItems,
-    t: tableNumber,
-    s: total,
-  }
 
-  return encodeURIComponent(JSON.stringify(compactData))
-}
 
 export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalProps) {
   const { t, i18n } = useTranslation()
   const [showReceipt, setShowReceipt] = useState(false)
   const [tableNumber, setTableNumber] = useState("")
-  const [showQrOrder, setShowQrOrder] = useState(false)
 
   useEffect(() => {
     // Clear table number on page reload
@@ -90,7 +84,7 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
                   <QRCode
                     value={`${window.location.origin}/shared-order?data=${compressOrderData(items, tableNumber, total)}`}
                     size={256}
-                    level="M"
+                    level="L"
                     className="rounded-lg"
                     style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                     viewBox={`0 0 256 256`}
