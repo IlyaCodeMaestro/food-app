@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { X, Minus, Plus } from "lucide-react";
 import Image from "next/image";
-
+import LZString from "lz-string";
 interface CartItem {
   item: {
     id: string;
@@ -35,25 +35,13 @@ interface CartModalProps {
   onClose: () => void;
 }
 
-const compressOrderData = (
-  items: CartItem[],
-  tableNumber: string,
-  total: number
-) => {
-  const simplifiedItems = items.map(({ item, quantity }) => ({
-    id: item.id,
-    t: item.titleRus,
-    p: item.price,
-    q: quantity,
-  }));
+const compressOrderData = (items: CartItem[], tableNumber: string, total: number) => {
+  const data = JSON.stringify({ items, tableNumber, total });
+  return LZString.compressToEncodedURIComponent(data);
+};
 
-  const compactData = {
-    i: simplifiedItems,
-    t: tableNumber,
-    s: total,
-  };
-
-  return encodeURIComponent(JSON.stringify(compactData));
+const decompressOrderData = (compressed: string) => {
+  return JSON.parse(LZString.decompressFromEncodedURIComponent(compressed) || "{}");
 };
 
 export function CartModal({
@@ -112,7 +100,7 @@ export function CartModal({
                   <QRCode
                     value={`${window.location.origin}/shared-order?data=${compressOrderData(items, tableNumber, total)}`}
                     size={256}
-                    level="L"
+                    level="M"
                     className="rounded-lg"
                     style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                     viewBox={`0 0 256 256`}
