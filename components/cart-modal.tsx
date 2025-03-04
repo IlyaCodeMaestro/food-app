@@ -30,24 +30,20 @@ interface CartModalProps {
   onClose: () => void
 }
 
-// В начале файла замените функцию compressOrderData на следующую:
 const compressOrderData = (items: CartItem[], tableNumber: string, total: number) => {
-  // Создаем упрощенное представление товаров (только ID, количество и цена)
   const simplifiedItems = items.map(({ item, quantity }) => ({
     id: item.id,
-    t: item.titleRus, // Используем только русское название для компактности
+    t: item.titleRus,
     p: item.price,
     q: quantity,
   }))
 
-  // Создаем компактный объект данных
   const compactData = {
     i: simplifiedItems,
     t: tableNumber,
     s: total,
   }
 
-  // Преобразуем в JSON и кодируем для URL
   return encodeURIComponent(JSON.stringify(compactData))
 }
 
@@ -55,6 +51,7 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
   const { t, i18n } = useTranslation()
   const [showReceipt, setShowReceipt] = useState(false)
   const [tableNumber, setTableNumber] = useState("")
+  const [showQrOrder, setShowQrOrder] = useState(false)
 
   useEffect(() => {
     // Clear table number on page reload
@@ -72,11 +69,6 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
 
   const formatPrice = (price: number) => `${price.toLocaleString()} ₸`
 
-  // Используем фактический домен вашего приложения
-  const getQrCodeUrl = () => {
-    return `https://food-app-kohl-rho.vercel.app/shared-order?data=${compressOrderData(items, tableNumber, total)}`
-  }
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
@@ -90,32 +82,27 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
         </DialogHeader>
 
         {showReceipt ? (
-          <div className="space-y-4">
-            {/* Отображение номера столика в чеке */}
-            {tableNumber && (
-              <div className="text-center bg-muted p-3 rounded-lg">
-                <span className="font-semibold text-lg">
-                  {t("cart.tableNumberLabel")}: {tableNumber}
-                </span>
+          <div className="space-y-6">
+            <div className="flex flex-col items-center justify-center space-y-6">
+              {/* Улучшенный дизайн QR-кода */}
+              <div className="bg-white p-8 rounded-2xl shadow-lg">
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl">
+                  <QRCode
+                    value={`${window.location.origin}/shared-order?data=${compressOrderData(items, tableNumber, total)}`}
+                    size={256}
+                    level="M"
+                    className="rounded-lg"
+                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                    viewBox={`0 0 256 256`}
+                  />
+                </div>
               </div>
-            )}
-            <div className="flex flex-col items-center justify-center p-4 space-y-4">
-              <div className="bg-white p-4 rounded-lg">
-                <QRCode
-                  value={getQrCodeUrl()}
-                  size={256}
-                  level="M"
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  viewBox={`0 0 256 256`}
-                />
-              </div>
-              <p className="text-center text-sm text-muted-foreground">
-                {t("cart.scanQrCodeText", "Отсканируйте QR-код, чтобы поделиться заказом")}
+              <p className="text-center text-sm text-muted-foreground px-4">
+                {t("cart.scanQrCodeText")}
               </p>
-              <p className="text-center text-xs text-muted-foreground break-all">{getQrCodeUrl()}</p>
             </div>
 
-            <div className="flex justify-between items-center font-bold text-lg">
+            <div className="flex justify-between items-center font-bold text-lg pt-4 border-t">
               <span>{t("cart.total")}:</span>
               <span>{formatPrice(total)}</span>
             </div>
@@ -208,7 +195,4 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
     </Dialog>
   )
 }
-
-
-
 

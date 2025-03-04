@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
@@ -109,8 +110,8 @@ export function MenuCategories({
                 i18n.language === "kk"
                   ? category.titleKaz || "Неизвестная категория"
                   : i18n.language === "ru"
-                  ? category.titleRus || "Неизвестная категория"
-                  : category.titleEng || "Unknown category";
+                    ? category.titleRus || "Неизвестная категория"
+                    : category.titleEng || "Unknown category";
 
               return (
                 <motion.div

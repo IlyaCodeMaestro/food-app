@@ -11,6 +11,7 @@
   "agree":"Согласны ли вы с прайсом?",
   "tableNumberLabel":"Введите номер столика",
   "cart.tableNumberLabel":"Номер вашего столика",
+  "cart.scanQrCodeText": "Отсканируйте QR-код, чтобы поделиться заказом",
   "cart": {
     "title": "Корзина",
     "yourOrder": "Ваш заказ",

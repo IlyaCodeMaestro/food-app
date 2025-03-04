@@ -11,16 +11,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
-import { Input } from "./ui/input";
+
 
 export function WelcomeFlow() {
   const { t, i18n } = useTranslation();
   const [step, setStep] = useState(1);
-  const [isLanguageLoaded, setIsLanguageLoaded] = useState(false); // Флаг загрузки
+  const [isLanguageLoaded, setIsLanguageLoaded] = useState(false);
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("language") || "kk";
-    i18n.changeLanguage(savedLanguage).then(() => setIsLanguageLoaded(true)); // Устанавливаем флаг после загрузки
+    i18n.changeLanguage(savedLanguage).then(() => setIsLanguageLoaded(true));
   }, []);
 
   const handleLanguageChange = (value: string) => {
@@ -36,34 +36,33 @@ export function WelcomeFlow() {
 
   return (
     <>
-      {/* Первое модальное окно: Приветствие */}
       {step === 1 && (
         <Dialog open>
           <DialogContent
             onPointerDownOutside={(e) => e.preventDefault()}
             onEscapeKeyDown={(e) => e.preventDefault()}
-            className="sm:max-w-lg p-8 bg-gradient-to-r from-blue-100 to-white rounded-xl shadow-lg"
+            className="sm:max-w-lg p-8 bg-gradient-to-r from-green-100 to-[#F4E1C1] rounded-xl shadow-lg"
           >
             <div className="text-center">
               <Image
-                src="/logo.svg"
+                src="./preview.png"
                 alt="Ак Кайын"
                 width={150}
                 height={150}
                 className="mx-auto mb-4"
               />
-              <h2 className="text-3xl font-extrabold text-blue-800 mb-4">
+              <h2 className="text-3xl font-extrabold text-green-800 mb-4">
                 {t("welcome")}
               </h2>
-              <p className="text-gray-700 text-lg mb-6">
+              <p className="text-[#8B5A2B] text-lg mb-6">
                 {t("welcomeMessage")}
               </p>
-              <p className="text-gray-600 mb-4"> {t("language")} </p>
+              <p className="text-[#6B8E23] mb-4"> {t("language")} </p>
               <Select
                 onValueChange={handleLanguageChange}
                 defaultValue={i18n.language}
               >
-                <SelectTrigger className="w-[140px] mx-auto border-blue-500 text-blue-700 font-semibold">
+                <SelectTrigger className="w-[140px] mx-auto border-green-500 text-green-700 font-semibold">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -73,8 +72,8 @@ export function WelcomeFlow() {
                 </SelectContent>
               </Select>
               <Button
-                onClick={() => setStep(2)}// Блокируем кнопку, если номер столика не введен
-                className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
+                onClick={() => setStep(2)}
+                className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
               >
                 {t("continue")}
               </Button>
@@ -83,7 +82,6 @@ export function WelcomeFlow() {
         </Dialog>
       )}
 
-      {/* Второе модальное окно: 10% обслуживание */}
       {step === 2 && (
         <Dialog open>
           <DialogContent
@@ -91,8 +89,8 @@ export function WelcomeFlow() {
             onEscapeKeyDown={(e) => e.preventDefault()}
           >
             <div className="text-center">
-              <h2 className="text-2xl font-bold mb-4">{t("order")}</h2>
-              <p className="text-gray-600 mb-6">{t("agreement")}</p>
+              <h2 className="text-2xl font-bold text-green-800 mb-4">{t("order")}</h2>
+              <p className="text-[#6B8E23] mb-6">{t("agreement")}</p>
               <div className="flex gap-4 justify-center">
                 <Button onClick={() => setStep(3)}>{t("yes")}</Button>
                 <Button onClick={reloadPage} variant="destructive">
@@ -104,7 +102,6 @@ export function WelcomeFlow() {
         </Dialog>
       )}
 
-      {/* Третье модальное окно: Аренда тапчанов и беседок */}
       {step === 3 && (
         <Dialog open>
           <DialogContent
@@ -112,10 +109,10 @@ export function WelcomeFlow() {
             onEscapeKeyDown={(e) => e.preventDefault()}
           >
             <div className="text-center">
-              <h2 className="text-3xl font-extrabold text-blue-800 mb-4">
+              <h2 className="text-3xl font-extrabold text-green-800 mb-4">
                 {t("rent")}
               </h2>
-              <p className="text-gray-700 text-lg mb-6">{t("agree")}</p>
+              <p className="text-[#8B5A2B] text-lg mb-6">{t("agree")}</p>
 
               <div className="flex gap-4 justify-center">
                 <Button onClick={() => setStep(4)}>{t("yes")}</Button>

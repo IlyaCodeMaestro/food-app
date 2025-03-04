@@ -11,6 +11,7 @@
   "agree": "Do you agree with the price list?",
   "tableNumberLabel": "Enter table number",
   "cart.tableNumberLabel": "Your table number",
+  "cart.scanQrCodeText": "Scan the QR code to share your order",
   "cart": {
     "title": "Cart",
     "yourOrder": "Your Order",

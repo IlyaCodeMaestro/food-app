@@ -12,8 +12,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="kk" suppressHydrationWarning>
-      <body className="bg-background text-foreground">
-
+      <body className="min-h-screen bg-gradient-to-r from-green-100 to-[#F4E1C1] dark:bg-gradient-to-r dark:from-gray-900 dark:to-gray-800">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
             {children}
