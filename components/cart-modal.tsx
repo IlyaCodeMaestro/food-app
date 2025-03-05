@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import QRCode from "react-qr-code"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal, DialogOverlay } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { X, Minus, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
@@ -46,9 +46,15 @@ const optimizeOrderData = (items: CartItem[], tableNumber: string, total: number
 
 // Сжимаем данные максимально эффективно
 const compressOrderData = (data: any): string => {
-  const json = JSON.stringify(data)
-  const compressed = deflate(json, { level: 9 }) // Максимальный уровень сжатия
-  return btoa(String.fromCharCode.apply(null, Array.from(compressed)))
+  try {
+    const json = JSON.stringify(data)
+    const compressed = deflate(json, { level: 9 }) // Максимальный уровень сжатия
+    return btoa(String.fromCharCode.apply(null, Array.from(compressed)))
+  } catch (error) {
+    console.error("Compression error:", error)
+    // Возвращаем простую строку JSON в случае ошибки
+    return btoa(JSON.stringify(data))
+  }
 }
 
 // Разделяем большие заказы на несколько QR-кодов
@@ -112,21 +118,45 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
     if (qrData.length === 0 || currentQRIndex >= qrData.length) return ""
 
     const compressed = compressOrderData(qrData[currentQRIndex])
-    // Устанавливаем размер QR-кода в зависимости от длины данных
+    // Устанавливаем размер QR-кода в зависимости от длины данных и размера экрана
     const dataLength = compressed.length
+    const isMobile = window.innerWidth < 768
 
     if (dataLength > 500) {
-      setQrSize(400) // Очень большой QR для очень больших данных
+      setQrSize(isMobile ? 280 : 320) // Очень большой QR для очень больших данных
     } else if (dataLength > 300) {
-      setQrSize(350) // Большой QR для больших данных
+      setQrSize(isMobile ? 260 : 300) // Большой QR для больших данных
     } else if (dataLength > 100) {
-      setQrSize(300) // Средний QR
+      setQrSize(isMobile ? 240 : 280) // Средний QR
     } else {
-      setQrSize(256) // Стандартный размер
+      setQrSize(isMobile ? 220 : 256) // Стандартный размер
     }
 
     return compressed
   }, [qrData, currentQRIndex])
+
+  // Обновляем размер QR-кода при изменении размера окна
+  useEffect(() => {
+    const handleResize = () => {
+      if (currentQRValue) {
+        const dataLength = currentQRValue.length
+        const isMobile = window.innerWidth < 768
+
+        if (dataLength > 500) {
+          setQrSize(isMobile ? 280 : 320)
+        } else if (dataLength > 300) {
+          setQrSize(isMobile ? 260 : 300)
+        } else if (dataLength > 100) {
+          setQrSize(isMobile ? 240 : 280)
+        } else {
+          setQrSize(isMobile ? 220 : 256)
+        }
+      }
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [currentQRValue])
 
   const handleTableNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -147,137 +177,142 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>
-            {showReceipt ? t("cart.yourOrder") : t("cart.title")}
-            <button onClick={onClose} className="absolute top-0 right-0 hover:bg-accent p-1 rounded-full">
-              <X className="h-5 w-5" />
-            </button>
-          </DialogTitle>
-        </DialogHeader>
+      <DialogPortal>
+        <DialogOverlay className="bg-black/80" />
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 gap-4">
+          <DialogHeader className="pb-2">
+            <DialogTitle>
+              {showReceipt ? t("cart.yourOrder") : t("cart.title")}
+              <button onClick={onClose} className="absolute top-2 right-2 hover:bg-accent p-1 rounded-full">
+                <X className="h-5 w-5" />
+              </button>
+            </DialogTitle>
+          </DialogHeader>
 
-        {showReceipt ? (
-          <div className="space-y-6 text-center">
-            <div className="bg-white p-4 rounded-2xl shadow-lg">
-              <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl">
-                {currentQRValue ? (
-                  <div className="flex flex-col items-center">
-                    <QRCode
-                      value={`${window.location.origin}/shared-order?data=${currentQRValue}`}
-                      size={qrSize}
-                      level="L" // Используем уровень L для меньшей плотности QR-кода
-                      className="rounded-lg"
-                    />
-
-                    {needsSplitting && (
-                      <div className="flex items-center justify-between w-full mt-4">
-                        <Button variant="outline" size="sm" onClick={handlePrevQR} disabled={currentQRIndex === 0}>
-                          <ChevronLeft className="h-4 w-4 mr-1" />
-                          Назад
-                        </Button>
-
-                        <span className="text-sm text-muted-foreground">
-                          {currentQRIndex + 1} из {qrData.length}
-                        </span>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleNextQR}
-                          disabled={currentQRIndex === qrData.length - 1}
-                        >
-                          Далее
-                          <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p>{t("cart.generatingQr")}</p>
-                )}
-              </div>
-            </div>
-
-            {needsSplitting && (
-              <p className="text-sm text-amber-600 font-medium px-4">
-                Ваш заказ разделен на {qrData.length} QR-кодов. Пожалуйста, отсканируйте все.
-              </p>
-            )}
-
-            <p className="text-sm text-muted-foreground px-4">{t("cart.scanQrCodeText")}</p>
-            <div className="flex justify-between font-bold text-lg border-t pt-4">
-              <span>{t("cart.total")}:</span>
-              <span>{formatPrice(total)}</span>
-            </div>
-            <Button className="w-full" onClick={() => setShowReceipt(false)}>
-              {t("cart.continue")}
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {items.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">{t("cart.empty")}</p>
-            ) : (
-              <>
-                <div className="space-y-4 max-h-[60vh] overflow-auto">
-                  {items.map(({ item, quantity }) => (
-                    <div key={item.id} className="flex items-center gap-4">
-                      <div className="relative h-16 w-16">
-                        <Image
-                          src={item.image || "/placeholder.svg"}
-                          alt={item.titleKaz}
-                          fill
-                          className="object-cover rounded-lg"
+          {showReceipt ? (
+            <div className="space-y-4 py-2">
+              <div className="bg-white rounded-xl shadow-sm">
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-3 rounded-xl">
+                  {currentQRValue ? (
+                    <div className="flex flex-col items-center">
+                      <div className="max-h-[50vh] flex items-center justify-center">
+                        <QRCode
+                          value={`${window.location.origin}/shared-order?data=${currentQRValue}`}
+                          size={qrSize}
+                          level="L"
+                          className="rounded-lg max-w-full max-h-full"
                         />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">{i18n.language === "kk" ? item.titleKaz : item.titleRus}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {i18n.language === "kk" ? item.descriptionKaz : item.descriptionRus}
-                        </p>
-                        <div className="text-sm text-muted-foreground">{formatPrice(item.price)}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => onUpdateQuantity(item.id, -1)}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-4 text-center">{quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => onUpdateQuantity(item.id, 1)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
+
+                      {needsSplitting && (
+                        <div className="flex items-center justify-between w-full mt-3">
+                          <Button variant="outline" size="sm" onClick={handlePrevQR} disabled={currentQRIndex === 0}>
+                            <ChevronLeft className="h-4 w-4 mr-1" />
+                            Назад
+                          </Button>
+
+                          <span className="text-sm text-muted-foreground">
+                            {currentQRIndex + 1} из {qrData.length}
+                          </span>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleNextQR}
+                            disabled={currentQRIndex === qrData.length - 1}
+                          >
+                            Далее
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  ) : (
+                    <p>{t("cart.generatingQr")}</p>
+                  )}
                 </div>
-                <div className="flex justify-between font-bold text-lg">
-                  <span>{t("cart.total")}:</span>
-                  <span>{formatPrice(total)}</span>
-                </div>
-                <Input
-                  type="text"
-                  placeholder={t("tableNumberLabel")}
-                  value={tableNumber}
-                  onChange={handleTableNumberChange}
-                />
-                <Button className="w-full" onClick={() => setShowReceipt(true)} disabled={!tableNumber.trim()}>
-                  {t("cart.checkout")}
-                </Button>
-              </>
-            )}
-          </div>
-        )}
-      </DialogContent>
+              </div>
+
+              {needsSplitting && (
+                <p className="text-sm text-amber-600 font-medium px-2">
+                  Ваш заказ разделен на {qrData.length} QR-кодов. Пожалуйста, отсканируйте все.
+                </p>
+              )}
+
+              <p className="text-sm text-muted-foreground px-2">{t("cart.scanQrCodeText")}</p>
+              <div className="flex justify-between font-bold text-lg border-t pt-3">
+                <span>{t("cart.total")}:</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+              <Button className="w-full" onClick={() => setShowReceipt(false)}>
+                {t("cart.continue")}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {items.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">{t("cart.empty")}</p>
+              ) : (
+                <>
+                  <div className="space-y-4 max-h-[60vh] overflow-auto">
+                    {items.map(({ item, quantity }) => (
+                      <div key={item.id} className="flex items-center gap-4">
+                        <div className="relative h-16 w-16">
+                          <Image
+                            src={item.image || "/placeholder.svg"}
+                            alt={item.titleKaz}
+                            fill
+                            className="object-cover rounded-lg"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{i18n.language === "kk" ? item.titleKaz : item.titleRus}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {i18n.language === "kk" ? item.descriptionKaz : item.descriptionRus}
+                          </p>
+                          <div className="text-sm text-muted-foreground">{formatPrice(item.price)}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => onUpdateQuantity(item.id, -1)}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-4 text-center">{quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => onUpdateQuantity(item.id, 1)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>{t("cart.total")}:</span>
+                    <span>{formatPrice(total)}</span>
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder={t("tableNumberLabel")}
+                    value={tableNumber}
+                    onChange={handleTableNumberChange}
+                  />
+                  <Button className="w-full" onClick={() => setShowReceipt(true)} disabled={!tableNumber.trim()}>
+                    {t("cart.checkout")}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   )
 }

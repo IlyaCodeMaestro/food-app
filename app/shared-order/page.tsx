@@ -1,10 +1,8 @@
 "use client"
 
-import { useMemo } from "react"
-
 import { X } from "lucide-react"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { inflate } from "pako"
 
 interface SimplifiedItem {
@@ -42,33 +40,43 @@ export default function SharedOrder() {
         }
 
         // Декодируем из Base64
-        const decoded = atob(compressedData)
-        const byteArray = new Uint8Array([...decoded].map((c) => c.charCodeAt(0)))
-        const jsonString = new TextDecoder().decode(inflate(byteArray))
-        const parsedData: OrderData = JSON.parse(jsonString)
+        try {
+          const decoded = atob(compressedData)
+          const byteArray = new Uint8Array([...decoded].map((c) => c.charCodeAt(0)))
+          const jsonString = new TextDecoder().decode(inflate(byteArray))
+          const parsedData: OrderData = JSON.parse(jsonString)
 
-        setOrderData(parsedData)
+          setOrderData(parsedData)
 
-        // Если это часть разделенного заказа, сохраняем в локальное хранилище
-        if (parsedData.p && parsedData.tp && parsedData.tp > 1) {
-          // Получаем существующие части заказа
-          const storedPartsString = localStorage.getItem(`order_${parsedData.t}`)
-          const storedParts: OrderData[] = storedPartsString ? JSON.parse(storedPartsString) : []
+          // Если это часть разделенного заказа, сохраняем в локальное хранилище
+          if (parsedData.p && parsedData.tp && parsedData.tp > 1) {
+            // Создаем уникальный ключ для заказа, используя номер столика и общую сумму
+            const orderKey = `order_${parsedData.t}_${parsedData.s}`
 
-          // Добавляем или обновляем текущую часть
-          const partIndex = storedParts.findIndex((part) => part.p === parsedData.p)
-          if (partIndex >= 0) {
-            storedParts[partIndex] = parsedData
-          } else {
-            storedParts.push(parsedData)
+            // Получаем существующие части заказа
+            const storedPartsString = localStorage.getItem(orderKey)
+            const storedParts: OrderData[] = storedPartsString ? JSON.parse(storedPartsString) : []
+
+            // Добавляем или обновляем текущую часть
+            const partIndex = storedParts.findIndex((part) => part.p === parsedData.p)
+            if (partIndex >= 0) {
+              storedParts[partIndex] = parsedData
+            } else {
+              storedParts.push(parsedData)
+            }
+
+            // Сохраняем обновленные части
+            localStorage.setItem(orderKey, JSON.stringify(storedParts))
+            setAllOrderParts(storedParts)
           }
-
-          // Сохраняем обновленные части
-          localStorage.setItem(`order_${parsedData.t}`, JSON.stringify(storedParts))
-          setAllOrderParts(storedParts)
+        } catch (decodeError) {
+          console.error("Error decoding data:", decodeError)
+          setError("Failed to decode order data. The QR code may be damaged or invalid.")
+          setLoading(false)
+          return
         }
       } catch (err) {
-        console.error("Error decoding order:", err)
+        console.error("Error processing order:", err)
         setError("Failed to load order information")
       } finally {
         setLoading(false)
@@ -244,4 +252,6 @@ export default function SharedOrder() {
     </div>
   )
 }
+
+
 
