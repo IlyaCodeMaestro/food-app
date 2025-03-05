@@ -1,11 +1,16 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { X, Minus, Plus } from 'lucide-react';
-import Image from 'next/image';
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { X, Minus, Plus } from "lucide-react";
+import Image from "next/image";
 interface CartItem {
   item: {
     id: string;
@@ -36,18 +41,18 @@ export function CartModal({
   const { t, i18n } = useTranslation();
   const [showReceipt, setShowReceipt] = useState(false);
   const [tableNumber, setTableNumber] = useState("");
-  
+
   useEffect(() => {
     // Clear table number on page reload
     sessionStorage.removeItem("tableNumber");
   }, []);
-  
+
   const handleTableNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setTableNumber(value);
     sessionStorage.setItem("tableNumber", value);
   };
-  
+
   // Вычисляем общую сумму
   const total = items.reduce(
     (sum, { item, quantity }) => sum + item.price * quantity,
@@ -95,7 +100,6 @@ export function CartModal({
                 </thead>
                 <tbody>
                   {items.map(({ item, quantity }) => {
-                    // Выбираем язык для отображения названия блюда
                     const title =
                       i18n.language === "kk" ? item.titleKaz : item.titleRus;
                     return (
@@ -136,7 +140,6 @@ export function CartModal({
               <>
                 <div className="space-y-4 max-h-[60vh] overflow-auto">
                   {items.map(({ item, quantity }) => {
-                    // Выбираем язык
                     const title =
                       i18n.language === "kk" ? item.titleKaz : item.titleRus;
                     const description =
@@ -199,19 +202,19 @@ export function CartModal({
                     onChange={handleTableNumberChange}
                   />
 
-                  <Button 
-                    className="w-full" 
+                  <Button
+                    className="w-full"
                     onClick={() => setShowReceipt(true)}
                     disabled={!tableNumber.trim()}
                   >
                     {t("cart.checkout")}
                   </Button>
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </DialogPortal>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </DialogContent>
     </Dialog>
   );
 }
