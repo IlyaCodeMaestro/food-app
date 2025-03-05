@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { Plus, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FlyingItem } from "./flying-item";
+
 interface MenuItem {
   id: string;
   titleKaz: string;
@@ -34,19 +35,44 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
       ? item.titleKaz
       : language === "ru"
         ? item.titleRus
-        : item.titleEng; // ✅ Теперь поддерживается английский
+        : item.titleEng;
 
   const description =
     language === "kk"
       ? item.descriptionKaz
       : language === "ru"
         ? item.descriptionRus
-        : item.descriptionEng; // ✅ Теперь поддерживается английский
+        : item.descriptionEng;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  useEffect(() => {
+    const checkDeviceType = () => {
+      // Typically, desktop is considered width > 1024px
+      setIsDesktop(window.innerWidth > 1024);
+    };
+
+    // Check device type on mount
+    checkDeviceType();
+
+    // Add event listener to handle window resize
+    window.addEventListener('resize', checkDeviceType);
+
+    // Cleanup event listener
+    return () => window.removeEventListener('resize', checkDeviceType);
+  }, []);
+
+  const handleImageClick = () => {
+    // Only open modal on desktop
+    if (isDesktop) {
+      setIsModalOpen(true);
+    }
+  };
+
   const handleAddToCart = () => {
     if (!buttonRef.current || isAnimating) return;
     const cartIcon = document.querySelector(".cart-icon");
@@ -65,10 +91,10 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
         whileHover={{ y: -5 }}
         className="bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
       >
-        {/* 🔍 Картинка, которая открывает модалку */}
+        {/* Image with conditional click behavior */}
         <div
           className="relative h-48 cursor-pointer"
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleImageClick}
         >
           <Image
             src={item.image || "/placeholder.svg"}
@@ -106,53 +132,55 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
         </div>
       </motion.div>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent
-          className="max-w-6xl w-[95vw] sm:w-[90vw] md:w-[90vw] lg:w-[80vw] h-[90vh] p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center rounded-lg bg-card relative overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-          <button
-            onClick={() => setIsModalOpen(false)}
-            className="absolute top-4 right-4 z-50 text-gray-500 hover:text-gray-800 transition-colors group"
+      {isDesktop && (
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent
+            className="max-w-6xl w-[95vw] sm:w-[90vw] md:w-[90vw] lg:w-[80vw] h-[90vh] p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center rounded-lg bg-card relative overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
           >
-            <X
-              className="h-6 w-6 stroke-current stroke-2 group-hover:rotate-90 transition-transform"
-              strokeWidth={2}
-            />
-          </button>
-
-          <div className="w-full h-full flex items-center justify-center relative">
-            <div
-              className={`w-full h-full flex items-center justify-center relative ${
-                isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
-              }`}
-              onClick={() => setIsZoomed(!isZoomed)}
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 z-50 text-gray-500 hover:text-gray-800 transition-colors group"
             >
-              <motion.div
-                initial={{ scale: 1 }}
-                animate={{
-                  scale: isZoomed ? 2.5 : 1,
-                  transformOrigin: "center center",
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                }}
-                className="w-full h-full flex items-center justify-center relative"
+              <X
+                className="h-6 w-6 stroke-current stroke-2 group-hover:rotate-90 transition-transform"
+                strokeWidth={2}
+              />
+            </button>
+
+            <div className="w-full h-full flex items-center justify-center relative">
+              <div
+                className={`w-full h-full flex items-center justify-center relative ${
+                  isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
+                }`}
+                onClick={() => setIsZoomed(!isZoomed)}
               >
-                <Image
-                  src={item.image || "/placeholder.svg"}
-                  alt={title}
-                  fill
-                  className="object-contain w-full h-full max-w-full max-h-full rounded-lg shadow-lg"
-                />
-              </motion.div>
+                <motion.div
+                  initial={{ scale: 1 }}
+                  animate={{
+                    scale: isZoomed ? 2.5 : 1,
+                    transformOrigin: "center center",
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 20,
+                  }}
+                  className="w-full h-full flex items-center justify-center relative"
+                >
+                  <Image
+                    src={item.image || "/placeholder.svg"}
+                    alt={title}
+                    fill
+                    className="object-contain w-full h-full max-w-full max-h-full rounded-lg shadow-lg"
+                  />
+                </motion.div>
+              </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* 🛒 Анимация перелёта товара в корзину */}
       {isAnimating && (
