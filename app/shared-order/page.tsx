@@ -1,6 +1,6 @@
 "use client"
 
-import { X } from "lucide-react"
+import { X, AlertTriangle } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState, useMemo } from "react"
 import { inflate } from "pako"
@@ -39,45 +39,119 @@ export default function SharedOrder() {
           return
         }
 
-        // Декодируем из Base64
+        console.log("Attempting to decode data:", compressedData.substring(0, 20) + "...")
+
+        // Пробуем декодировать из Base64
+        let decoded
         try {
-          const decoded = atob(compressedData)
-          const byteArray = new Uint8Array([...decoded].map((c) => c.charCodeAt(0)))
-          const jsonString = new TextDecoder().decode(inflate(byteArray))
-          const parsedData: OrderData = JSON.parse(jsonString)
-
-          setOrderData(parsedData)
-
-          // Если это часть разделенного заказа, сохраняем в локальное хранилище
-          if (parsedData.p && parsedData.tp && parsedData.tp > 1) {
-            // Создаем уникальный ключ для заказа, используя номер столика и общую сумму
-            const orderKey = `order_${parsedData.t}_${parsedData.s}`
-
-            // Получаем существующие части заказа
-            const storedPartsString = localStorage.getItem(orderKey)
-            const storedParts: OrderData[] = storedPartsString ? JSON.parse(storedPartsString) : []
-
-            // Добавляем или обновляем текущую часть
-            const partIndex = storedParts.findIndex((part) => part.p === parsedData.p)
-            if (partIndex >= 0) {
-              storedParts[partIndex] = parsedData
-            } else {
-              storedParts.push(parsedData)
-            }
-
-            // Сохраняем обновленные части
-            localStorage.setItem(orderKey, JSON.stringify(storedParts))
-            setAllOrderParts(storedParts)
-          }
-        } catch (decodeError) {
-          console.error("Error decoding data:", decodeError)
-          setError("Failed to decode order data. The QR code may be damaged or invalid.")
+          decoded = atob(compressedData)
+          console.log("Base64 decoded successfully")
+        } catch (base64Error) {
+          console.error("Base64 decoding error:", base64Error)
+          setError("Failed to decode QR data (Base64 error)")
           setLoading(false)
           return
         }
+
+        // Преобразуем в Uint8Array
+        let byteArray
+        try {
+          byteArray = new Uint8Array([...decoded].map((c) => c.charCodeAt(0)))
+          console.log("Converted to byte array, length:", byteArray.length)
+        } catch (byteError) {
+          console.error("Byte array conversion error:", byteError)
+          setError("Failed to process QR data")
+          setLoading(false)
+          return
+        }
+
+        // Пробуем распаковать данные
+        let jsonString
+        try {
+          const inflated = inflate(byteArray)
+          jsonString = new TextDecoder().decode(inflated)
+          console.log("Successfully inflated data, JSON length:", jsonString.length)
+        } catch (inflateError) {
+          console.error("Inflation error:", inflateError)
+
+          // Пробуем прочитать данные напрямую, без распаковки
+          try {
+            jsonString = new TextDecoder().decode(byteArray)
+            console.log("Trying direct JSON parsing without inflation")
+          } catch (decodeError) {
+            console.error("Text decoding error:", decodeError)
+            setError("Failed to decompress QR data")
+            setLoading(false)
+            return
+          }
+        }
+
+        // Пробуем распарсить JSON
+        let parsedData: OrderData
+        try {
+          parsedData = JSON.parse(jsonString)
+          console.log("Successfully parsed JSON:", parsedData)
+        } catch (jsonError) {
+          console.error("JSON parsing error:", jsonError)
+          setError("Failed to parse order data")
+          setLoading(false)
+          return
+        }
+
+        // Проверяем, что данные имеют правильную структуру
+        if (!parsedData.i || !Array.isArray(parsedData.i) || !parsedData.t) {
+          console.error("Invalid data structure:", parsedData)
+          setError("Invalid order data format")
+          setLoading(false)
+          return
+        }
+
+        setOrderData(parsedData)
+
+        // Если это часть разделенного заказа, сохраняем в локальное хранилище
+        if (parsedData.p && parsedData.tp && parsedData.tp > 1) {
+          // Создаем уникальный ключ для заказа, используя номер столика и общую сумму
+          const orderKey = `order_${parsedData.t}_${parsedData.s}`
+          console.log("Saving part to localStorage with key:", orderKey)
+
+          // Получаем существующие части заказа
+          const storedPartsString = localStorage.getItem(orderKey)
+          let storedParts: OrderData[] = []
+
+          if (storedPartsString) {
+            try {
+              storedParts = JSON.parse(storedPartsString)
+              console.log("Found existing parts in localStorage:", storedParts.length)
+            } catch (storageError) {
+              console.error("Error parsing stored parts:", storageError)
+              // Продолжаем с пустым массивом
+            }
+          }
+
+          // Добавляем или обновляем текущую часть
+          const partIndex = storedParts.findIndex((part) => part.p === parsedData.p)
+          if (partIndex >= 0) {
+            storedParts[partIndex] = parsedData
+            console.log("Updated existing part:", parsedData.p)
+          } else {
+            storedParts.push(parsedData)
+            console.log("Added new part:", parsedData.p)
+          }
+
+          // Сохраняем обновленные части
+          try {
+            localStorage.setItem(orderKey, JSON.stringify(storedParts))
+            console.log("Successfully saved to localStorage")
+          } catch (saveError) {
+            console.error("Error saving to localStorage:", saveError)
+            // Продолжаем без сохранения
+          }
+
+          setAllOrderParts(storedParts)
+        }
       } catch (err) {
-        console.error("Error processing order:", err)
-        setError("Failed to load order information")
+        console.error("Unexpected error processing order:", err)
+        setError("An unexpected error occurred while processing the order")
       } finally {
         setLoading(false)
       }
@@ -128,6 +202,8 @@ export default function SharedOrder() {
       "cart.partialOrder": "Часть заказа",
       "cart.missingParts": "Отсканируйте остальные части заказа",
       "cart.scannedParts": "Отсканировано частей",
+      "cart.tryAgain": "Попробовать снова",
+      "cart.scanInstructions": "Пожалуйста, отсканируйте все QR-коды в одном браузере",
       error: "Ошибка",
       loading: "Загрузка...",
     },
@@ -141,6 +217,8 @@ export default function SharedOrder() {
       "cart.partialOrder": "Тапсырыс бөлігі",
       "cart.missingParts": "Тапсырыстың қалған бөліктерін сканерлеңіз",
       "cart.scannedParts": "Сканерленген бөліктер",
+      "cart.tryAgain": "Қайталап көріңіз",
+      "cart.scanInstructions": "Барлық QR кодтарды бір браузерде сканерлеңіз",
       error: "Қате",
       loading: "Жүктелуде...",
     },
@@ -167,10 +245,17 @@ export default function SharedOrder() {
       <div className="flex items-center justify-center min-h-screen p-4">
         <div className="text-center p-6 max-w-md mx-auto bg-white rounded-lg shadow-lg">
           <div className="text-red-500 mb-4">
-            <X className="h-12 w-12 mx-auto" />
+            <AlertTriangle className="h-12 w-12 mx-auto" />
           </div>
           <h1 className="text-xl font-bold mb-2">{t("error")}</h1>
-          <p>{error}</p>
+          <p className="mb-4">{error}</p>
+          <p className="text-sm text-muted-foreground mb-4">{t("cart.scanInstructions")}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            {t("cart.tryAgain")}
+          </button>
         </div>
       </div>
     )
@@ -252,6 +337,7 @@ export default function SharedOrder() {
     </div>
   )
 }
+
 
 
 

@@ -47,24 +47,43 @@ const optimizeOrderData = (items: CartItem[], tableNumber: string, total: number
 // Сжимаем данные максимально эффективно
 const compressOrderData = (data: any): string => {
   try {
+    // Преобразуем данные в JSON
     const json = JSON.stringify(data)
-    const compressed = deflate(json, { level: 9 }) // Максимальный уровень сжатия
-    return btoa(String.fromCharCode.apply(null, Array.from(compressed)))
+    console.log("JSON size before compression:", json.length)
+
+    // Сжимаем данные с максимальным уровнем сжатия
+    const compressed = deflate(json, { level: 9 })
+    console.log("Compressed size:", compressed.length)
+
+    // Преобразуем в base64
+    const base64 = btoa(String.fromCharCode.apply(null, Array.from(compressed)))
+    console.log("Base64 size:", base64.length)
+
+    return base64
   } catch (error) {
     console.error("Compression error:", error)
-    // Возвращаем простую строку JSON в случае ошибки
-    return btoa(JSON.stringify(data))
+
+    // В случае ошибки, возвращаем простую строку JSON в base64
+    try {
+      return btoa(JSON.stringify(data))
+    } catch (fallbackError) {
+      console.error("Fallback encoding error:", fallbackError)
+      // Если и это не работает, возвращаем пустую строку
+      return ""
+    }
   }
 }
 
 // Разделяем большие заказы на несколько QR-кодов
-const splitOrderData = (items: CartItem[], tableNumber: string, total: number, maxItemsPerQR = 5) => {
+const splitOrderData = (items: CartItem[], tableNumber: string, total: number, maxItemsPerQR = 3) => {
   const chunks: CartItem[][] = []
 
   // Разделяем товары на группы
   for (let i = 0; i < items.length; i += maxItemsPerQR) {
     chunks.push(items.slice(i, i + maxItemsPerQR))
   }
+
+  console.log(`Splitting order into ${chunks.length} parts`)
 
   // Создаем оптимизированные данные для каждой группы
   return chunks.map((chunk, index) => {
@@ -84,6 +103,7 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
   const [tableNumber, setTableNumber] = useState("")
   const [currentQRIndex, setCurrentQRIndex] = useState(0)
   const [qrSize, setQrSize] = useState(256)
+  const [qrErrorLevel, setQrErrorLevel] = useState<"L" | "M" | "Q" | "H">("L")
 
   // Загружаем номер столика из sessionStorage
   useEffect(() => {
@@ -97,7 +117,7 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
   const total = items.reduce((sum, { item, quantity }) => sum + item.price * quantity, 0)
 
   // Определяем, нужно ли разделять QR-код
-  const needsSplitting = items.length > 5
+  const needsSplitting = items.length > 3
 
   // Подготавливаем данные для QR-кода
   const qrData = useMemo(() => {
@@ -122,14 +142,21 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
     const dataLength = compressed.length
     const isMobile = window.innerWidth < 768
 
+    console.log(`QR data length: ${dataLength} bytes`)
+
+    // Устанавливаем уровень коррекции ошибок в зависимости от размера данных
     if (dataLength > 500) {
-      setQrSize(isMobile ? 280 : 320) // Очень большой QR для очень больших данных
+      setQrErrorLevel("L") // Минимальная коррекция для очень больших данных
+      setQrSize(isMobile ? 280 : 320)
     } else if (dataLength > 300) {
-      setQrSize(isMobile ? 260 : 300) // Большой QR для больших данных
+      setQrErrorLevel("L")
+      setQrSize(isMobile ? 260 : 300)
     } else if (dataLength > 100) {
-      setQrSize(isMobile ? 240 : 280) // Средний QR
+      setQrErrorLevel("M") // Средняя коррекция для средних данных
+      setQrSize(isMobile ? 240 : 280)
     } else {
-      setQrSize(isMobile ? 220 : 256) // Стандартный размер
+      setQrErrorLevel("M")
+      setQrSize(isMobile ? 220 : 256)
     }
 
     return compressed
@@ -199,7 +226,7 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
                         <QRCode
                           value={`${window.location.origin}/shared-order?data=${currentQRValue}`}
                           size={qrSize}
-                          level="L"
+                          level={qrErrorLevel}
                           className="rounded-lg max-w-full max-h-full"
                         />
                       </div>
@@ -235,7 +262,7 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
 
               {needsSplitting && (
                 <p className="text-sm text-amber-600 font-medium px-2">
-                  Ваш заказ разделен на {qrData.length} QR-кодов. Пожалуйста, отсканируйте все.
+                  Ваш заказ разделен на {qrData.length} QR-кодов. Пожалуйста, отсканируйте все в одном браузере.
                 </p>
               )}
 
@@ -316,4 +343,5 @@ export function CartModal({ items, onUpdateQuantity, open, onClose }: CartModalP
     </Dialog>
   )
 }
+
 
