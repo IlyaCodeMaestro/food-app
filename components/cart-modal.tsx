@@ -145,10 +145,10 @@ export function CartModal({
                         : item.descriptionRus;
                     return (
                       <div key={item.id} className="flex items-center gap-4">
-                        <div className="relative h-16 w-16 flex-shrink-0">
+                        <div className="relative h-16 w-16">
                           <Image
                             src={item.image || "/placeholder.svg"}
-                            alt={title}
+                            alt={item.titleKaz}
                             fill
                             className="object-cover rounded-lg"
                           />
@@ -197,7 +197,6 @@ export function CartModal({
                     placeholder={t("tableNumberLabel")}
                     value={tableNumber}
                     onChange={handleTableNumberChange}
-                    className="w-full"
                   />
 
                   <Button 
@@ -207,12 +206,12 @@ export function CartModal({
                   >
                     {t("cart.checkout")}
                   </Button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </DialogContent>
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }
