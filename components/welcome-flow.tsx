@@ -43,7 +43,7 @@ export function WelcomeFlow() {
       {/* Приветственное окно */}
       {step === 1 && (
         <Dialog open>
-          <DialogContent className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-xl">
+          <DialogContent hideClose  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-xl">
             <div className="text-center">
               <Image src="./preview.png" alt="Ак Кайын" width={150} height={150} className="mx-auto mb-4" />
               <h2 className="text-4xl font-extrabold drop-shadow-lg">{t("welcome")}</h2>
