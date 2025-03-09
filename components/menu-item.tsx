@@ -60,10 +60,10 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
     checkDeviceType();
 
     // Add event listener to handle window resize
-    window.addEventListener('resize', checkDeviceType);
+    window.addEventListener("resize", checkDeviceType);
 
     // Cleanup event listener
-    return () => window.removeEventListener('resize', checkDeviceType);
+    return () => window.removeEventListener("resize", checkDeviceType);
   }, []);
 
   const handleImageClick = () => {
@@ -93,15 +93,15 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
       >
         {/* Image with conditional click behavior */}
         <div
-          className="relative h-48 cursor-pointer"
+          className="relative w-full h-48 md:h-56 lg:h-64 cursor-pointer flex justify-center items-center bg-white"
           onClick={handleImageClick}
         >
-          <Image
-            src={item.image || "/placeholder.svg"}
-            alt={title}
-            fill
-            className="object-cover transition-transform duration-300"
-          />
+           <Image
+    src={item.image || "/placeholder.svg"}
+    alt={title}
+    fill
+    className="object-contain rounded-lg"
+  />
           {item.tag && (
             <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
               <Star className="w-4 h-4 mr-1 fill-current" />
@@ -131,8 +131,6 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
           </div>
         </div>
       </motion.div>
-
-     
 
       {/* 🛒 Анимация перелёта товара в корзину */}
       {isAnimating && (
