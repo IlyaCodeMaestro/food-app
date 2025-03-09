@@ -8,16 +8,18 @@ import { WelcomeFlow } from "@/components/welcome-flow";
 import { Header } from "@/components/header";
 import { CartModal } from "@/components/cart-modal";
 const QUERY = `{
-  "categories": *[_type == "category"]{ _id, titleKaz, titleRus }, // ✅ Теперь загружаем titleKaz и titleRus
+  "categories": *[_type == "category"]{ _id, titleKaz, titleRus, titleEng }, // ✅ Теперь загружаем titleKaz и titleRus
   "dishes": *[_type == "dish"]{
     _id,
     titleKaz,
     titleRus,
+     titleEng,
     descriptionKaz,
     descriptionRus,
+    descriptionEng,
     priceKZT,
     "image": image.asset->url,
-    "category": category->{_id, titleKaz, titleRus} // ✅ Теперь категории тоже имеют titleKaz и titleRus
+    "category": category->{_id, titleKaz, titleRus, titleEng} // ✅ Теперь категории тоже имеют titleKaz и titleRus
   }
 }`;
 
@@ -43,6 +45,7 @@ export default function Home() {
             id: c._id,
             titleKaz: c.titleKaz || "Категория без названия (KZ)",
             titleRus: c.titleRus || "Категория без названия (RU)",
+            titleEng: c.titleEng || "Категория без названия (Eng)",
           }))
         );
 

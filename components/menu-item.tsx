@@ -132,55 +132,7 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
         </div>
       </motion.div>
 
-      {isDesktop && (
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent
-            className="max-w-6xl w-[95vw] sm:w-[90vw] md:w-[90vw] lg:w-[80vw] h-[90vh] p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center rounded-lg bg-card relative overflow-hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-            onPointerDownOutside={(e) => e.preventDefault()}
-            onEscapeKeyDown={(e) => e.preventDefault()}
-          >
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 z-50 text-gray-500 hover:text-gray-800 transition-colors group"
-            >
-              <X
-                className="h-6 w-6 stroke-current stroke-2 group-hover:rotate-90 transition-transform"
-                strokeWidth={2}
-              />
-            </button>
-
-            <div className="w-full h-full flex items-center justify-center relative">
-              <div
-                className={`w-full h-full flex items-center justify-center relative ${
-                  isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"
-                }`}
-                onClick={() => setIsZoomed(!isZoomed)}
-              >
-                <motion.div
-                  initial={{ scale: 1 }}
-                  animate={{
-                    scale: isZoomed ? 2.5 : 1,
-                    transformOrigin: "center center",
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 20,
-                  }}
-                  className="w-full h-full flex items-center justify-center relative"
-                >
-                  <Image
-                    src={item.image || "/placeholder.svg"}
-                    alt={title}
-                    fill
-                    className="object-contain w-full h-full max-w-full max-h-full rounded-lg shadow-lg"
-                  />
-                </motion.div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+     
 
       {/* 🛒 Анимация перелёта товара в корзину */}
       {isAnimating && (
