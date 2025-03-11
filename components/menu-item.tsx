@@ -110,7 +110,7 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
       </motion.div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-lg flex flex-col items-center">
+        <DialogContent className="max-w-lg max-h-[80vh] flex flex-col items-center overflow-y-auto">
           <div className="relative w-full max-w-[90%] max-h-[80vh] flex justify-center">
             <Image
               src={item.image || "/placeholder.svg"}
