@@ -16,7 +16,7 @@ interface MenuItem {
   descriptionKaz: string;
   descriptionRus: string;
   descriptionEng: string;
-  price: number;
+  price?: number; // Сделал price необязательным, чтобы избежать ошибок
   image: string;
   tag?: string;
 }
@@ -27,6 +27,8 @@ interface MenuItemProps {
 }
 
 export function MenuItem({ item, onAddToCart }: MenuItemProps) {
+  if (!item) return null; // Проверка на случай, если item отсутствует
+
   const { t, i18n } = useTranslation();
   const language = i18n.language;
 
@@ -85,7 +87,7 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
           <p className="text-muted-foreground text-sm mb-4">{description}</p>
           <div className="flex items-center justify-between">
             <span className="font-bold text-lg">
-              {item.price.toLocaleString()} ₸
+              {(item.price ?? 0).toLocaleString()} ₸
             </span>
             <Button
               ref={buttonRef}
@@ -94,12 +96,12 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
                 onAddToCart(item);
               }}
               size="sm"
-              className="rounded-full cursor-pointer flex items-center" // Добавляем flex для выравнивания
-              asChild // Позволяет передать Motion в Button
+              className="rounded-full cursor-pointer flex items-center"
+              asChild
             >
               <motion.button
-                whileTap={{ scale: 0.9 }} // Анимация уменьшения при клике
-                transition={{ duration: 0.1 }} // Быстрое сжатие и возврат
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.1 }}
               >
                 <Plus className="w-5 h-5 mr-1" />
                 {t("cart.addToCart")}
@@ -125,14 +127,10 @@ export function MenuItem({ item, onAddToCart }: MenuItemProps) {
             {description}
           </p>
           <span className="font-bold text-lg">
-            {item.price.toLocaleString()} ₸
+            {(item.price ?? 0).toLocaleString()} ₸
           </span>
         </DialogContent>
       </Dialog>
     </>
   );
-}
-
-{
-  /* 🛒 Анимация перелёта товара в корзину */
 }
