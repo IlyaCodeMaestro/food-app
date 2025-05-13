@@ -22,6 +22,7 @@
     "mediumTapchan": "Medium tapchan (up to 15 people) — 2,000 KZT/hour",
     "smallTapchan": "Tapchan (up to 6 people) — 1,500 KZT/hour",
     "vipGazebo": "VIP gazebo (up to 20 people) — 5,000 KZT/hour",
+     "vipGazebosr": "VIP gazebo medium (up to 15 people) — 2,500 KZT/hour",
     "bigGazebo": "Large gazebo (up to 60 people) — 5,000 KZT/hour",
     "vipCabin": "VIP cabin — 5,000 KZT/hour",
     "vipHall": "VIP hall rental — 5,000 KZT/hour",
