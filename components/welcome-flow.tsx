@@ -157,6 +157,9 @@ export function WelcomeFlow() {
                 <span className="text-green-500">🛖</span> {t("mediumTapchan")}
               </li>
               <li className="flex items-center gap-2 flex-wrap">
+                <span className="text-red-400">🎪</span> {t("Gazebo")}
+              </li>
+              <li className="flex items-center gap-2 flex-wrap">
                 <span className="text-red-400">🎪</span> {t("bigGazebo")}
               </li>
               <li className="flex items-center gap-2 flex-wrap">
